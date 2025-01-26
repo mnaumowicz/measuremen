@@ -1,0 +1,26 @@
+/*
+ * Copyright (c) 2019, Linaro Ltd.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+&i2c0 {
+	compatible = "nordic,nrf-twi";
+	status = "okay";
+
+
+	bme280: bme280@77 {
+		/* 0x76 - SDO <-> GND */
+		/* 0x77 - SDO <-> VCC */
+		compatible = "bosch,bme280";
+		reg = <0x77>;
+		label = "ENVIRONMENTAL_SENSOR";
+	};
+};
+&uart0 {
+	compatible = "nordic,nrf-uarte";
+	current-speed = <115200>;
+	status = "okay";
+	pinctrl-0 = <&uart0_default>;
+	pinctrl-1 = <&uart0_sleep>;
+	pinctrl-names = "default", "sleep";
+};

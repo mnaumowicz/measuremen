@@ -1,0 +1,46 @@
+:name: Zedboard
+:description: This script runs Linux on Zedboard (Zynq-7000 SoC).
+
+using sysbus
+$name?="Zedboard"
+mach create $name
+
+machine LoadPlatformDescription @platforms/boards/zedboard.repl
+showAnalyzer uart0
+sysbus Redirect 0xC0000000 0x0 0x10000000
+
+machine LoadPlatformDescriptionFromString "temperatureSensor: Sensors.BMP280 @ i2c0 0x76"
+
+#$bin?=@https://dl.antmicro.com/projects/renode/zynq-interface-tests-vmlinux-s_14142952-ab5cd7445f31414fcbf8c79d49d737c669034ef2
+$bin?=@/home/debian/buildroot/output/build/linux-custom/vmlinux
+#$rootfs?=@https://dl.antmicro.com/projects/renode/zynq--interface-tests-rootfs.ext2-s_16777216-191638e3b3832a81bebd21d555f67bf3a4d7882a
+$rootfs?=@//home/debian/buildroot/output/images/rootfs.ext2
+$dtb?=@https://dl.antmicro.com/projects/renode/zynq-interface-tests-gem0.dtb-s_11724-f0dec8ffadea47891dfe2441215401f09f7242fa
+#$dtb?=@/home/konrad/Downloads/ztest.dtb
+## set timer frequency ##
+ttc0 Frequency 33333333
+ttc1 Frequency 33333333
+
+emulation CreateSwitch "switch1"
+connector Connect gem0 switch1
+emulation CreateTap "tap0" "tap" true
+connector Connect host.tap switch1
+
+emulation CreateEnvironment "env"
+env Temperature 36.6
+i2c0.temperatureSensor SetEnvironment env
+
+macro reset
+"""
+    ## set registers ##
+    cpu SetRegisterUnsafe 0 0x000
+    cpu SetRegisterUnsafe 1 0xD32 # processor variant (cortex-a9)
+    cpu SetRegisterUnsafe 2 0x100 # device tree address
+    ## load binaries ##
+    sysbus LoadELF $bin
+    sysbus LoadFdt $dtb 0x100 "console=ttyPS0,115200 root=/dev/ram0 rw ip=dhcp nameserver=150.254.5.4 nameserver=150.254.5.11 initrd=0x1a000000,32M" false
+    sysbus ZeroRange 0x1a000000 0x3200000
+    sysbus LoadBinary $rootfs 0x1a000000
+"""
+
+runMacro $reset

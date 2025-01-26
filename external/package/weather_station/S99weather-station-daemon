@@ -1,0 +1,12 @@
+#!/bin/sh
+
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+
+RPI_MODEL=$(cat /proc/cpuinfo | grep "Model" | awk '{print $5}')
+
+# Load kernel modules based on Raspberry Pi model
+[ $RPI_MODEL = "3" ] && modprobe i2c-bcm2708
+[ $RPI_MODEL = "4" ] && modprobe i2c-bcm2835
+
+modprobe i2c-dev
+weather_station

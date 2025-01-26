@@ -1,0 +1,25 @@
+:name: NRF52840
+:description: This script runs Zephyr Shell demo on NRF52840.
+
+using sysbus
+
+mach create
+machine LoadPlatformDescription @platforms/boards/arduino_nano_33_ble.repl
+machine LoadPlatformDescriptionFromString "temperatureSensor: Sensors.BMP280 @ twi0 0x77"
+
+$bin?=@/home/debian/zephyrproject/zephyr/build/zephyr/zephyr.elf
+
+showAnalyzer uart0
+
+macro reset
+"""
+    emulation CreateEnvironment "env"
+    env Temperature 36.6
+    sysbus.twi0.temperatureSensor UncompensatedPressure 110000
+    sysbus.twi0.temperatureSensor SetEnvironment env
+
+    logLevel 3 sysbus.nvic
+    logLevel 3 sysbus.twi0
+    sysbus LoadELF $bin
+"""
+runMacro $reset

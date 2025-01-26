@@ -1,0 +1,5 @@
+config BR2_PACKAGE_WEATHER_STATION
+    bool "weather_station"
+    depends on BR2_PACKAGE_I2C_TOOLS
+    help
+        Weather Station package
